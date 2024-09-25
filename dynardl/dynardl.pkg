@@ -1,5 +1,33 @@
-d 'DEA': Data envelopment analysis
+d 'dynardl': Dynamically simulate autoregressive distributed lag (ARDL) models Use dynardl With STATA 18
 d
-f dea.ado
-f dea.sthlp
-f coelli_table6.4.dta
+f descsave.ado
+f descsave.hlp
+f dsconcat.ado
+f dsconcat.hlp
+f dynardl.ado
+f dynardl.hlp
+f dynardl.sthlp
+f eclplot.ado
+f eclplot.dlg
+f eclplot.hlp
+f factext.ado
+f factext.hlp
+f factmerg.ado
+f factmerg.hlp
+f factref.ado
+f factref.hlp
+f ingap.ado
+f ingap.hlp
+f lincomest.ado
+f lincomest.hlp
+f lincomest_p.ado
+f listtex.ado
+f listtex.hlp
+f parmby.ado
+f parmby.hlp
+f parmest.ado
+f parmest.hlp
+f pssbounds.ado
+f pssbounds.hlp
+f sencode.ado
+f sencode.hlp
