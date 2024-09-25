@@ -1,0 +1,190 @@
+{smcl}
+{hline}
+help for {cmd:descsave} {right:(SJ3-3: st0043)}
+{hline}
+
+
+{title:Save descriptive attributes of variables to a do-file and/or a Stata dataset}
+
+{p 8 15 2}{cmd:descsave} [{it:varlist}] [ {cmd:,}
+ {cmdab:sa:ving}{cmd:(}{it:datafilename} [{cmd:,replace}]{cmd:)}
+ {cmdab:do:file}{cmd:(}{it:dofilename} [{cmd:,replace}]{cmd:)}
+ {cmdab:ch:arlist}{cmd:(}{it:characteristic_list}{cmd:)}
+ {cmdab:idn:um}{cmd:(}{it:#}{cmd:)} {cmdab:ids:sr}{cmd:(}{it:string}{cmd:)}
+ {cmdab:ren:ame}{cmd:(}{it:oldvarname_1 newvarname1 ... oldvarname_n newvarname_n}{cmd:)}
+ {it:describe_options} ]
+
+{p 4 8 2}
+where {it:characteristic_list} is a list of {it:characteristic_name}s
+separated by spaces, and {it:describe_options} is a list of options used by
+{cmd:describe}.
+
+
+{title:Description}
+
+{p 4 4 2}
+{cmd:descsave} is an extension of {help describe}, which lists descriptive
+attributes for the variables given by {it:varlist} or for all variables in
+the current dataset if {it:varlist} is not specified. {cmd:descsave} also
+creates two output files, specified by the {cmd:saving} and {cmd:dofile}
+options.  The descriptive attributes are variable names, storage types, value
+labels, and variable labels (as output by {help describe}), and also
+(optionally) a list of characteristics specified by the {cmd:charlist} option.
+The file specified by {cmd:saving()} is a Stata dataset with one observation
+per variable and data on the descriptive attributes of these variables.  The
+file specified by {cmd:dofile} is a do-file, containing commands that can be
+run to reconstruct the descriptive attributes of the variables, assuming that
+variables of the same names have been created and are numeric or character as
+appropriate.  {cmd:descsave} can be used together with {help outsheet} to
+create a definitive generic spreadsheet version of the current dataset,
+together with a Stata do-file to reconstruct the descriptive attributes of the
+variables after the spreadsheet has been input using {help insheet}.
+
+
+{title:Options}
+
+{p 4 8 2}{cmd:saving(}{it:datafilename} [{cmd:,replace}]{cmd:)} specifies an
+output Stata dataset, with one observation per variable, and data on the
+descriptive attributes of the variable. If {cmd:replace} is specified, then
+any existing file of the same name is overwritten. 
+
+{p 4 8 2}{cmd:dofile(}{it:dofilename} [{cmd:,replace}]{cmd:)} specifies an
+output Stata do-file, with commands to reconstruct the variable descriptive
+attributes (storage types, display formats, value labels, variable labels, and
+selected characteristics), assuming that variables with those names already
+exist and are numeric or string-valued as appropriate.  If {cmd:replace} is
+specified, then any existing file of the same name is overwritten. 
+
+{p 4 8 2}{cmd:charlist(}{it:characteristic_list}{cmd:)} specifies a list of
+characteristic names, separated by spaces.  The characteristics specified will
+be reconstructed by the do-file specified by {cmd:dofile()} (if specified)
+and be written to variables in the dataset specified by {cmd:saving()} (if
+specified).  If a characteristic is more than 80 characters long, then it will
+be truncated to 80 characters in the output files.  (This is not expected to
+cause problems very often.)
+
+{p 4 8 2}{cmd:idnum(}{it:#}{cmd:)} specifies an ID number for the output
+dataset specified by {cmd:saving()}.  It is used to create a numeric variable
+{hi:idnum} in the output dataset with that value for all observations. This is
+useful if the output dataset is concatenated with other {hi:descsave} output
+datasets using {help append}.
+
+{p 4 8 2}{cmd:idstr(}{it:#}{cmd:)} specifies an ID string for the output
+dataset specified by {cmd:saving()}.  It is used to create a string variable
+{hi:idstr} in the output dataset with that value for all observations. (A
+{cmd:saving()} output dataset may have {hi:idnum}, {hi:idstr}, both, or
+neither).
+
+{p 4 8 2}{cmd:rename(}{it:oldvarname_1 newvarname1 ... oldvarname_n
+newvarname_n}{cmd:)} specifies a list of pairs of variable names. The first
+variable name of each pair specifies a variable in the output dataset
+specified by {cmd:saving()}, which is renamed to the second variable name of
+the pair.
+
+
+{title:Output dataset specified by {cmd:saving()}}
+
+{p 4 4 2}
+The data file specified by {cmd:saving()} has one observation per variable. If
+the {cmd:rename} option is not specified, then it contains the following
+variables:
+
+    {hi:idnum}       numeric id
+    {hi:idstr}       string id
+    {hi:name}        variable name
+    {hi:type}        storage type
+    {hi:format}      display format
+    {hi:vallab}      value label
+    {hi:varlab}      variable label
+    {hi:char}{it:n}       char[{it:characteristic_name}]
+
+{p 4 4 2}
+The variables {hi:idnum} or {hi:idstr} are only present if requested in the
+options of the same names.  There is one {hi:char}{it:n} variable for each
+{it:characteristic_name} in the list specified by the {cmd:charlist()} option.
+The variable {hi:char}{it:n} specifies the {it:n}th characteristic specified
+in the {cmd:charlist()} option (truncated if necessary to the maximum length
+for a string variable under the current edition of Stata). All of these
+variables can be renamed using the {cmd:rename} option.
+
+
+{title:Remarks}
+
+{p 4 4 2}
+{cmd:descsave} can be used together with {help outsheet} and {help insheet} to
+construct a definitive generic spreadsheet version of the data (in case the
+user needs to return to the data decades into the future, when all proprietary
+software has evolved beyond recognition). The do-file specified by
+{cmd:dofile} can be used to reconstruct variable attributes after inputting
+the definitive version of the data using {help insheet}, assuming that the
+variables are still numeric or string-valued, as specified in the original
+Stata data.  (The user may need to use {help destring} after using {help
+insheet}, if some of the numeric variables in the definitive generic
+spreadsheet are formatted in nonstandard ways.) The output do-file can also be
+translated manually into other software languages if the user wants to use the
+data under other software platforms. However, {cmd:descsave} can also be used
+with the {cmd:parmest} and {cmd:parmby} commands (see help for {help parmby}
+or {help parmest} if installed). Typically, the user uses {cmd:descsave} to
+save to a do-file the attributes of variables representing multilevel factors,
+generates dummy variables for these multilevel factors using {help tabulate}
+or {help xi}, enters these dummy variables into a regression analysis, saves
+the results of the regression to a dataset using {cmd:parmby} or
+{cmd:parmest}, and then reconstructs the multilevel factors from the variable
+{hi:label} in the {cmd:parmest} output dataset. The user can then run the
+do-file using {help run} or {help do} to reconstruct the descriptive
+attributes of the reconstructed multilevel factors.
+
+
+{title:Examples}
+
+{p 8 20 2}{cmd:. descsave,do(auto.do,replace)}{p_end}
+
+{p 8 20 2}{cmd:. descsave,saving(autodesc.dta,replace)}{p_end}
+
+{p 8 20 2}{cmd:. descsave,do(auto.do,replace) saving(autodesc.dta,replace) rename(varlab variable_label format variable_format)}{p_end}
+
+{p 4 4 2}
+The following example will work with the {hi:auto} data. The first part
+creates a generic text spreadsheet in {hi:auto.txt}, with a program to
+reconstruct the variable attributes in {hi:auto.do}. The second part
+reconstructs the {hi:auto} data from {hi:auto.txt}, using {hi:auto.do}.
+
+{p 8 20 2}{cmd:. descsave,do(auto.do,replace) sa(autodesc.dta,replace) charlist(omit)}{p_end}
+{p 8 20 2}{cmd:. outsheet using auto.txt,nolabel replace}{p_end}
+
+{p 8 20 2}{cmd:. insheet using auto.txt,clear}{p_end}
+{p 8 20 2}{cmd:. run auto.do}{p_end}
+{p 8 20 2}{cmd:. describe}{p_end}
+
+{p 4 4 2}
+The following advanced example will work with the {hi:auto} data if the
+packages {help parmest} and {help split} are installed. {cmd:split} and
+{cmd:parmest} can be installed from SSC. To install {cmd:split}, type 
+{cmd:ssc install split}. To install {cmd:parmest}, type 
+{cmd:ssc install parmest}.
+
+{p 8 20 2}{cmd:. tab foreign,gene(type_) nolabel}{p_end}
+{p 8 20 2}{cmd:. qui descsave foreign, do(foreign.do,replace)}{p_end}
+{p 8 20 2}{cmd:. parmby "regress mpg type_*,noconst robust",label}{p_end}
+{p 8 20 2}{cmd:. split label,parse(==) gen(s_)}{p_end}
+{p 8 20 2}{cmd:. gene foreign=real(s_2)}{p_end}
+{p 8 20 2}{cmd:. run foreign.do}{p_end}
+{p 8 20 2}{cmd:. grap estimate min95 max95 foreign,s(O..) c(.II) xlab(0 1) xscal(-0.5 1.5) ylab}{p_end}
+
+
+{title:Author}
+
+{p 4 4 2}
+Roger Newson, King's College, London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
+
+
+{title:Also see}
+
+{p 4 19 2}Manual:   {hi:[R] describe}, {hi:[R] destring}, {hi:[R] insheet}, {hi:[R] outsheet}, {hi:[R] label}, {hi:[R] tabulate}, {hi:[R] xi}
+ {break}{hi:[U] 15.8 Characteristics}
+ {break}{hi:[P] char}
+
+{p 4 19 2}Online:   help for {help describe}, {help destring}, {help insheet}, {help outsheet}, {help label}, {help tabulate}, {help char}, {help xi}{p_end}
+{p 13 19 2} help for {help parmby}, {help parmest}, and {help split} if installed
+{p_end}

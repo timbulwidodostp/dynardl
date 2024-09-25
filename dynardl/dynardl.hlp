@@ -1,0 +1,319 @@
+{smcl}
+{* *! version 1.0.5  01may2018}{...}
+{viewerjumpto "Title" "dynardl##title"}{...}
+{viewerjumpto "Syntax" "dynardl##syntax"}{...}
+{viewerjumpto "Description" "dynardl##description"}{...}
+{viewerjumpto "Options" "dynardl##options"}{...}
+{viewerjumpto "Examples" "dynardl##examples"}{...}
+{viewerjumpto "Citations" "dynardl##citations"}{...}
+{viewerjumpto "Reference" "dynardl##reference"}{...}
+{viewerjumpto "Authors" "dynardl##authors"}{...}
+{viewerjumpto "Also see" "dynardl##alsosee"}{...}
+{cmd:help dynardl}{right: ({browse "http://www.stata-journal.com/article.html?article=st0545":SJ18-4: st0545})}
+{hline}
+
+{marker title}{...}
+{title:Title}
+
+{p2colset 5 16 18 2}{...}
+{p2col:{cmd:dynardl} {hline 2}}Dynamically simulate autoregressive distributed lag models{p_end}
+{p2colreset}{...}
+
+
+{marker syntax}{...}
+{title:Syntax}
+
+{p 8 15 2}
+{cmd:dynardl} 
+{depvar}
+{indepvars}{cmd:,} {opt l:ags(numlist)} {opt shockvar(varname)} {opt shockval(#)} [{it:options}]
+
+{synoptset 20 tabbed}{...}
+{synopthdr}
+{synoptline}
+{p2coldent:* {opth l:ags(numlist)}}numeric list of the number of lags to include for each variable{p_end}
+{p2coldent:* {opth shockvar(varname)}}a single independent variable from {it:indepvars} that is to be shocked{p_end}
+{p2coldent:* {opt shockval(#)}}amount to shock {opt shockvar(varname)} by{p_end}
+{synopt:{opt d:iffs(numlist)}}numeric list of the number of contemporaneous first differences to include for each variable{p_end}
+{synopt:{opt lagd:iffs(numlist)}}numeric list of the number of lagged first differences to include for each variable{p_end}
+{synopt:{opt levels(numlist)}}numeric list of variables to appear in levels{p_end}
+{synopt:{opt ec}}if specified, {it:depvar} will be estimated in first differences{p_end}
+{synopt:{opt tr:end}}add a deterministic linear trend{p_end}
+{synopt:{opt nocon:stant}}suppress the constant{p_end}
+{synopt:{opt range(#)}}length of scenario to simulate; default is {cmd:range(20)}{p_end}
+{synopt:{opt sig(#)}}significance level for confidence intervals; default is {cmd:sig(95)}{p_end}
+{synopt:{opt t:ime(#)}}scenario time in which the shock occurs; default is {cmd:time(10)}{p_end}
+{synopt:{opth sav:ing(filename)}}specify the name of the output file; default is {cmd:saving(dynardl_results.dta)}{p_end}
+{synopt:{opt forceset(numlist)}}force the variables to be set to a user-specified value{p_end}
+{synopt:{opt sims(#)}}number of simulations; default is {cmd:sims(1000)}{p_end}
+{synopt:{opt burnin(#)}}allow program to iterate for stable starting values (rarely used){p_end}
+{synopt:{opt graph}}plot dynamic results using a spike plot; additional options are {opt rarea} for an area plot or {opt change} to plot changes from sample mean{p_end}
+{synopt:{opt expectedval}}calculate expected values instead of predicted values (the default){p_end}
+{synoptline}
+{p2colreset}{...}
+{p 4 6 2}
+* {opt lags(numlist)}, {opt shockvar(varname)}, and {opt shockval(#)} are
+required.
+
+
+{marker description}{...}
+{title:Description}
+
+{pstd}
+{cmd:dynardl} produces dynamic simulations of autoregressive distributed lag
+(ARDL) models.  See Philips (2018) for a discussion of this approach,
+especially in regard to the error-correction ARDL representation of Pesaran,
+Shin, and Smith (2001).  See Jordan and Philips (2018) for an in-depth
+discussion of this command.
+
+{pstd}
+Users can find and download the most up-to-date version of {cmd:dynardl} at
+{browse "http://andyphilips.github.io/dynamac/"}.
+
+{pstd} 
+{cmd:dynardl} is designed to dynamically simulate the effects of a
+counterfactual change in one weakly exogenous regressor at a point in time
+using stochastic simulation techniques.  Because the ARDL procedure can
+produce models that are complicated to interpret, {cmd:dynardl} is designed to
+ease the burden of substantive interpretations through the creation of
+predicted (or expected) values of the dependent variable (along with
+associated confidence intervals), which can be plotted to show how a change in
+one variable "flows" through the model over time.  {cmd:dynardl} takes 1,000
+draws (or however many simulations a user desires) of the set of parameters
+from a multivariate normal distribution, using the estimated parameters and
+the variance-covariance matrix from the linear regression.  All covariates are
+set to certain values (typically means), which are used to create predicted
+Y-hat values plus stochastic uncertainty.
+
+
+{marker options}{...}
+{title:Options}
+
+{phang}
+{opth lags(numlist)} is a numeric list of the number of lags to include for
+each variable, separated by a comma.  The number of desired lags is listed in
+exactly the same order in which the variables {it:depvar} and {it:indepvars}
+appear.  {cmd:lags()} is required.  For instance, in a model with two weakly
+exogenous variables, we lag all variables by one period by specifying
+{cmd:lags(1, 1, 1)}.  Note that the lag on {it:depvar} (always the first entry
+in {cmd:lags()}) must always be specified.  To fit a model without a lag for a
+particular variable, simply replace the number with a {cmd:.}; for instance,
+if we did not want a lag on the first regressor and wanted a lag of t-1 on the
+second regressor, we type {cmd:lags(1, ., 1)}.  {cmd:dynardl} can accommodate
+consecutive lags by specifying the minimum lag, a forward slash followed by
+the maximum lag.  For instance, {cmd:lags(1/3, ., .)} will introduce lags of
+y_t at t-1, t-2, and t-3 into the model.  The command can also add
+nonconsecutive lags.  For instance, to add a single lag of y_t at t-1 and t-3,
+specify {cmd:lags(1 3, ., .)}.
+
+{phang}
+{opth shockvar(varname)} is a single independent variable from the list of
+{it:indepvars} that is to be shocked.  It will experience a counterfactual
+shock of size {opt shockval(#)} at time {opt time(#)}.  {cmd:shockvar()} is
+required.
+
+{phang}
+{opt shockval(#)} is the amount to shock {opt shockvar(varname)} by.  A common
+shock value is a +/- one standard-deviation shock, although any shock value
+can be used.  {cmd:shockval()} is required.
+
+{phang}
+{opt diffs(numlist)} is a numeric list of the number of contemporaneous first
+differences to include for each variable, separated by a comma.  Note that the
+first entry (the placeholder for the {it:depvar}) will always be empty
+(denoted by {cmd:.}) because the first difference of the dependent variable
+cannot appear on the right-hand side of the model.  Only first differences can
+be taken using this option; for instance, {cmd:diffs(., 1, .)} would first
+difference only the first regressor in the equation.
+
+{phang}
+{opt lagdiffs(numlist)} is a numeric list of the number of lagged first
+differences to include for each variable, separated by a comma.  The syntax is
+similar to that of {cmd:lags()}.  For instance, to include a lagged first
+difference at t-2 for {it:depvar} (that is, Delta y_{t-2} = y_{t-2} -
+y_{t-3}), a lagged first difference at t-1 for the first regressor, and none
+for the second, specify {cmd:lagdiffs(2, 1, .)}.  To include an additional
+lagged first difference for both the first and second lags of {it:depvar},
+specify {cmd:lagdiffs(1/2, 1, .)}.  Users can also include nonconsecutive
+lagged first differences.  For example, {cmd:lagdiffs(1 3/4, ., .)} would add a
+first difference at t-1, t-3, and t-4 for the dependent variable.
+
+{phang}
+{opt levels(numlist)} is a numeric list of variables to appear in levels (that
+is, not lagged or differenced but appearing contemporaneously at time t),
+separated by a comma.  For example, {cmd:levels(., 1, .)} tells {cmd:dynardl}
+to include the first regressor contemporaneously at time t.
+
+{phang}
+{opt ec} specifies that {depvar} will be estimated in first differences.  If
+fitting an error-correction model, users will need to use this option.
+
+{phang}
+{opt trend} specifies that the program will add a deterministic linear trend
+to the model.
+
+{phang}
+{opt noconstant} specifies that the constant will be suppressed.
+
+{phang}
+{opt range(#)} is the length of scenario to simulate.  The default is
+{cmd:range(20)}.  Note that the range must be larger than {cmd:time()}.
+
+{phang}
+{opt sig(#)} specifies the significance level for the percentile confidence
+intervals.  The default is {cmd:sig(95)}.
+
+{phang}
+{opt time(#)} is the scenario time in which the shock occurs to
+{cmd:shockvar()}.  The default is {cmd:time(10)}.
+
+{phang}
+{opth saving(filename)} specifies the name of the output file where the means
+of the predicted values and user-specified confidence intervals will be saved.
+The default is {cmd:saving(dynardl_results.dta)}.
+
+{phang}
+{opt forceset(numlist)} allows the user to change the setting of the lagged
+(or unlagged if using {cmd:levels()}) levels of the variables.  This could be
+useful when estimating a dummy variable, for instance, when we wish to see the
+effect of a movement from zero to one.  By default, the command will fit the
+ARDL model in equilibrium; all lagged variables and variables appearing in
+levels are set to their sample means.  All first differences and any lagged
+first differences are set to zero.  For instance, to set the value of the first
+regressor to 5, specify {cmd:forceset(., 5, .)}.
+
+{phang}
+{opt sims(#)} is the number of simulations.  The default is {cmd:sims(1000)}.
+If confidence intervals are particularly noisy, it may help to increase this
+number.  You may need to increase the {helpb matsize} in Stata.
+
+{phang}
+{opt burnin(#)} allows {cmd:dynardl} to run a number of early simulations that
+are dropped, resulting in more stable starting values.  This option is rarely
+used.  However, if using the option {cmd:forceset()}, the predicted values
+will not be in equilibrium at the start of the simulation and will take some
+time to converge on stable values.  To get around this, one can use the
+{cmd:burnin} option to specify a number of simulations to "throw away" at the
+start.  The default is {cmd:burnin(20)}.  Setting a burn-in does not change
+the simulation range or time; to simulate a range of 25 with a shock time at
+10 and a burn-in of 30, specify {cmd:burnin(30) range(25) time(10)}.
+
+{phang}
+{opt graph} can be specified to automatically plot the dynamic results using a
+spike plot.  Two alternative plots are possible: 
+
+{phang2}
+{cmd:rarea} creates an area plot.  Predicted means and 75%, 90%, and 95%
+confidence intervals are shown with this option.
+
+{phang2}
+{cmd:change} shows predicted changes (from the sample mean) across time,
+starting with the time at which the shock occurs, similar to an
+impulse-response function.
+
+{phang}
+{opt expectedval} calculates expected values of the dependent variable such
+that the average of 1,000 stochastic draws now becomes the estimate of the
+stochastic component for each of the simulations.  This effectively removes
+stochastic uncertainty.  Predicted values are more conservative than expected
+values.  By default, {cmd:dynardl} will calculate predicted values of the
+dependent variable for a given number of simulations.  For every simulation,
+the predicted value comes from a systematic component -- which contains
+uncertainty surrounding the parameter estimates from the model -- and a single
+draw from the stochastic component.  Note that {cmd:dynardl} takes longer to
+run if calculating expected values.  We recommend that unless users have a
+specific theoretical or substantive justification for using expected values,
+they instead use the default predicted values that account for the random
+uncertainty surrounding the predictions.
+
+
+{marker examples}{...}
+{title:Examples}
+
+{pstd}
+Open up the Lutkepohl data:{p_end}
+
+{phang2}{cmd:. set matsize 5000}{p_end}
+{phang2}{cmd:. webuse lutkepohl2}{p_end}
+{phang2}{cmd:. tsset}{p_end}
+
+{pstd}
+A -1 shock to {cmd:ln_inc} for the estimated equation: d.{cmd:ln_inv} =
+l.{cmd:ln_inv} + d.{cmd:ln_inc} + l.{cmd:ln_inc} + d.{cmd:ln_consump} +
+l.{cmd:ln_consump}{p_end}
+
+{phang2}{cmd:. dynardl ln_inv ln_inc ln_consump, lags(1, 1, 1) diffs(., 1, 1) shockvar(ln_inc) shockval(-1) time(10) range(30) graph ec}{p_end}
+
+{pstd}
+The same shock for the following equation, with an area plot: d.{cmd:ln_inv} =
+l.{cmd:ln_inv} + ld.{cmd:ln_inv} + l3d.{cmd:ln_inv} + l.{cmd:ln_inc} +
+l2.{cmd:ln_inc} + l3.{cmd:ln_inc} + d.{cmd:ln_consump} +
+l.{cmd:ln_consump}{p_end}
+
+{phang2}
+{cmd:. dynardl ln_inv ln_inc ln_consump, lags(1, 1/3, 1) diffs(., ., 1) lagdiffs(1 3, ., .) shockvar(ln_inc) shockval(-1) time(10) range(30) graph ec rarea sims(5000)}{p_end}
+
+{pstd}
+The same shock for the following equation, graphed as an impulse-response
+function, with {cmd:ln_inc} and {cmd:ln_consump} set to 6 and 7, respectively:
+{cmd:ln_inv} = l.{cmd:ln_inv} + {cmd:ln_inc} + l.{cmd:ln_inc} +
+{cmd:ln_consump} + l.{cmd:ln_consump}{p_end}
+
+{phang2}
+{cmd:. dynardl ln_inv ln_inc ln_consump, lags(1, 1, 1) levels(., 1, 1) forceset(., 6, 7) shockvar(ln_inc) shockval(-1) time(10) range(30) graph change sims(5000)}{p_end}
+
+{pstd}
+See Jordan and Philips (2018) for more examples and an in-depth
+discussion.{p_end}
+
+
+{marker citations}{...}
+{title:Citations}
+
+{pstd}
+If you use {cmd:dynardl}, please cite
+
+{phang}
+Jordan, S., and A. Q. Philips. 2018.
+{browse "http://www.stata-journal.com/article.html?article=st0545":Cointegration testing and dynamic simulations of autoregressive distributed lag models}.
+{it:Stata Journal} 18: 902-923.{p_end}
+
+{pstd}
+and
+
+{phang}
+Philips, A. Q. 2018. Have your cake and eat it too? Cointegration and dynamic
+inference from autoregressive distributed lag models.
+{it:American Journal of Political Science} 62: 230-244.{p_end}
+
+
+{marker reference}{...}
+{title:Reference}
+
+{phang}
+Pesaran, M. H., Y. Shin, and R. J. Smith. 2001. Bounds testing approaches to
+the analysis of level relationships. {it:Journal of Applied Econometrics} 16:
+289-326.{p_end}
+
+
+{marker authors}{...}
+{title:Authors}
+
+{pstd}
+Soren Jordan {break}
+Department of Political Science {break}
+Auburn University  {break}
+sorenjordanpols@gmail.com{p_end}
+
+{pstd} 
+Andrew Q. Philips {break}
+Department of Political Science {break}
+University of Colorado Boulder {break}
+andrew.philips@colorado.edu{p_end}
+
+
+{marker alsosee}{...}
+{title:Also see}
+
+{p 4 14 2}
+Article:  {it:Stata Journal}, volume 18, number 4: {browse "http://www.stata-journal.com/article.html?article=st0545":st0545}{p_end}
